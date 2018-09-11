@@ -104,8 +104,7 @@ class FG_eval {
       AD<double> a0 = vars[a_start + t - 1];
 
       // To Account for the 100ms latency, shift the current commands into the
-      // future by one time step, dt = 100ms..
-
+      // future by one time step, or dt = 100ms..
       if(t>1){
         delta0 = vars[delta_start +t -2];
         a0 = vars[a_start +t -2];

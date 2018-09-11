@@ -97,7 +97,7 @@ int main() {
 
           // Transform waypoints in ptsx / ptsy to vehicle perspective by
           // shifting car reference angle by 90 degrees
-          // This places the origin at the vehicle center
+          // This places the origin at the vehicle center and makes life easier
 
           for (int i = 0; i< ptsx.size(); i++){
           	double dx = ptsx[i] - px;
