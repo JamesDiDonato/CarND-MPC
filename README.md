@@ -4,6 +4,7 @@
 - September 2018
 ---
 
+Solution Video : https://www.youtube.com/watch?v=K9rbYH4H3CI&feature=youtu.be
 
 [//]: # (Image References)
 

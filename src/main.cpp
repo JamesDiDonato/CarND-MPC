@@ -84,6 +84,8 @@ int main() {
         auto j = json::parse(s);
         string event = j[0].get<string>();
         if (event == "telemetry") {
+
+        	double latency_dt = 0.1;
           // j[1] is the data JSON object
           vector<double> ptsx = j[1]["ptsx"];
           vector<double> ptsy = j[1]["ptsy"];
@@ -94,6 +96,7 @@ int main() {
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
           double Lf = 2.67;
+
 
           // Transform waypoints in ptsx / ptsy to vehicle perspective by
           // shifting car reference angle by 90 degrees
@@ -127,13 +130,23 @@ int main() {
           double epsi = -atan(coeffs[1]);
 
           /*
-          * TODO: Calculate steering angle and throttle using MPC.
-          * Both are in between [-1, 1].
+          // Add latency of 100ms
+					px = v * cos(psi) * latency_dt;
+					py = v * sin(psi) * latency_dt;
+					psi = v * steer_value / Lf * latency_dt;
+					v = v + throttle_value * latency_dt;
+					cte = cte + v * sin(epsi) * latency_dt;
+					epsi = epsi + v * (steer_value / Lf )* latency_dt;
+
+					// Add everything to the state
+					Eigen::VectorXd state(6);
+					state << px, py, psi, v, cte, epsi;
           */
 
-          // Run the MPC Solver:
           Eigen::VectorXd state(6);
           state << 0,0,0,v,cte,epsi;
+
+					// Run the MPC Solver:
           auto vars = mpc.Solve(state,coeffs);
           steer_value = vars[0];
           throttle_value = vars[1];
@@ -195,8 +208,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
-          int latency = 100;
-          this_thread::sleep_for(chrono::milliseconds(latency));
+          this_thread::sleep_for(chrono::milliseconds(100));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {

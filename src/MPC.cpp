@@ -23,10 +23,10 @@ double dt = 0.1;
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
 
- //Define reference state variables goals:
+ //Define reference state variables:
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 70;
+double ref_v = 45;
 
 size_t x_start = 0;
 size_t y_start = x_start + N;
@@ -56,21 +56,21 @@ class FG_eval {
 
     //Cost Based on Reference State:
     for (int i = 0; i<N ; i++){
-      fg[0] += 5000*CppAD::pow(vars[cte_start + i],2); //Cross Track Error
-      fg[0] += 5000*CppAD::pow(vars[epsi_start + i], 2); //Orientation Error
+      fg[0] += 2000*CppAD::pow(vars[cte_start + i],2); //Cross Track Error
+      fg[0] += 2000*CppAD::pow(vars[epsi_start + i], 2); //Orientation Error
       fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2); // Reference Velocity Error
     }
 
     // Minimize actuator change-rate:
     for (int i = 0; i < N - 1; i++) {
-      fg[0] += 200*CppAD::pow(vars[delta_start + i], 2); //Steering
-      fg[0] += 5*CppAD::pow(vars[a_start + i], 2); //Acceleration
+      fg[0] += 10*CppAD::pow(vars[delta_start + i], 2); //Steering
+      fg[0] += 2*CppAD::pow(vars[a_start + i], 2); //Acceleration
     }
 
     // Minimize the value gap between sequential actuations:
     for (int i = 0; i < N - 2; i++) {
-      fg[0] += 200*CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2); //Steering
-      fg[0] += 50*CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2); //Acceleration
+      fg[0] += 10000*CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2); //Steering
+      fg[0] += 25*CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2); //Acceleration
     }
 
     // Setup Model Constraints
@@ -99,16 +99,17 @@ class FG_eval {
       AD<double> cte0 = vars[cte_start + t - 1];
       AD<double> epsi0 = vars[epsi_start + t - 1];
 
-      // The actuation commands at actuation at time t.
+      // The actuation commands at time t.
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
       // To Account for the 100ms latency, shift the current commands into the
       // future by one time step, or dt = 100ms..
       if(t>1){
-        delta0 = vars[delta_start +t -2];
-        a0 = vars[a_start +t -2];
+        delta0 = vars[delta_start + t - 2];
+        a0 = vars[a_start + t - 2];
       }
+
 
       //Calculate polynomial value and desired psi (using derivative of f)
       AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2]*x0*x0 + coeffs[3]*x0*x0*x0;
@@ -145,6 +146,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;
   size_t i;
   typedef CPPAD_TESTVECTOR(double) Dvector;
+
 
   double x = state[0];
   double y = state[1];
@@ -204,7 +206,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   }
 
   // Set the upper and lower constraints to the state variables except for first state
-  // Give a place for the solve to start from:
+  // Give a place for the solver to start from:
   constraints_lowerbound[x_start] = x;
   constraints_lowerbound[y_start] = y;
   constraints_lowerbound[psi_start] = psi;
